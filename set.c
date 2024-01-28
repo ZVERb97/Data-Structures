@@ -1,23 +1,4 @@
-#include <stddef.h>
-#include <string.h>
-#include <stdio.h>
-
-#define HASHMAP_SIZE 64
-#define HASHMAP_SIZE_LIST 1
-#define BUFFER_SIZE 20
-
-struct aiv_set_item
-{
-    const char *key;
-    size_t key_len;
-};
-
-struct aiv_set
-{
-    struct aiv_set_item hashmap[HASHMAP_SIZE][HASHMAP_SIZE_LIST];
-    int counter;
-};
-
+#include "set.h"
 
 size_t djb33x_hash(const char *key, const size_t keylen)
 {
@@ -31,7 +12,7 @@ size_t djb33x_hash(const char *key, const size_t keylen)
     return hash;
 }
 
-void aiv_set_insert(struct aiv_set *set, const char *key)
+struct aiv_set_item *aiv_set_insert(struct aiv_set *set, const char *key)
 {
     const size_t key_len = strlen(key);
 
@@ -50,15 +31,18 @@ void aiv_set_insert(struct aiv_set *set, const char *key)
             set->hashmap[index][i].key = key;
             set->hashmap[index][i].key_len = key_len;
             printf("added %s at index %llu slot %llu\n", key, index, i);
-            return;
+
+            return &set->hashmap[index][i];
         }else if (set->hashmap[index][i].key_len == key_len && memcmp(set->hashmap[index][i].key, key, key_len) == 0)
         {
             printf("Key %s already exists at index %llu slot %llu\n", key, index, i);
-            return;
+            return &set->hashmap[index][i];
         }
     }
 
     printf("COLLISION! for %s (index %llu)\n", key, index);
+
+    return NULL;
 }
 
 void aiv_set_remove(struct aiv_set *set, const char *key)
@@ -85,7 +69,7 @@ void aiv_set_remove(struct aiv_set *set, const char *key)
     
 }
 
-void aiv_set_find(struct aiv_set *set, const char *key)
+struct aiv_set_item *aiv_set_find(struct aiv_set *set, const char *key)
 {
     const size_t key_len = strlen(key);
 
@@ -102,15 +86,17 @@ void aiv_set_find(struct aiv_set *set, const char *key)
             if (set->hashmap[index][i].key_len == key_len && !memcmp(set->hashmap[index][i].key, key, key_len))
             {
                 printf("FOUND %s at index %llu slot %llu\n", key, index, i);
-                return;
+                return &set->hashmap[index][i];
             }
         }
     }
 
     printf("%s not found for removal\n", key);
+
+    return NULL;
 }
 
-int main(int argc, char **argv)
+int value(int argc, char **argv)
 {
     struct aiv_set myset;
     memset(&myset, 0, sizeof(struct aiv_set));
